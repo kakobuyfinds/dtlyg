@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Browse the LoveGoBuy spreadsheet with real CAFANS product links and estimated USD prices. Filter shoes, sweatshirts, tees and jackets, then plan your order.">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="LoveGoBuy spreadsheet | CAFANS Finds &amp; USD Prices">
+  <meta property="og:description" content="Filter CAFANS finds by category, check the original listings and estimate what your order could cost.">
+  <title>LoveGoBuy spreadsheet | CAFANS Finds &amp; USD Prices</title>
+  <!--
+    Save as index.html. Search submission is pending because the public URL was
+    not supplied. After publishing, add the exact preferred URL as a canonical
+    and request indexing for that URL in the verified Google Search Console
+    and Bing Webmaster Tools properties.
+    https://developers.google.com/search/docs/crawling-indexing/ask-google-to-recrawl
+    https://www.bing.com/webmasters/help/url-inspection-55a30305
+
+    Search review: lovegobuy.cc emphasizes broad search and buying guides,
+    lovegobuyguide.com emphasizes a dated dataset and QC workflow, and
+    lovegosheet.com emphasizes trending finds and signup. This page combines
+    crawlable source links, a mobile-friendly filter and a landed-cost worksheet.
+    Search ordering varies by location and device.
+  -->
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1b2f26;
+      --muted: #4e6358;
+      --forest: #102e23;
+      --paper: #f6f5ee;
+      --white: #fff;
+      --line: #d3ddd4;
+      --lime: #dbf68d;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 1rem/1.55 system-ui, sans-serif;
+    }
+    a { color: inherit; }
+    a:hover { text-decoration-thickness: .15em; }
+    :focus-visible { outline: 3px solid #ad5b10; outline-offset: 4px; }
+    [hidden] { display: none !important; }
+    h1, h2, h3, p { margin: 0; }
+    h1, h2 { font-family: Georgia, serif; line-height: 1.04; font-weight: 500; }
+    h1 { font-size: clamp(2.8rem, 8vw, 6.3rem); letter-spacing: -.055em; }
+    h2 { font-size: clamp(2rem, 4vw, 3.6rem); letter-spacing: -.04em; }
+    h3 { font-size: 1.1rem; line-height: 1.25; }
+    .wrap { width: min(72rem, calc(100% - 2rem)); margin-inline: auto; }
+    .top, .hero { background: var(--forest); color: var(--white); }
+    .top { border-bottom: 1px solid #49665a; }
+    .top .wrap, nav, .actions {
+      display: flex;
+      align-items: center;
+      gap: .8rem 1.25rem;
+      flex-wrap: wrap;
+    }
+    .top .wrap { justify-content: space-between; padding-block: 1rem; }
+    nav a { text-underline-offset: .22em; }
+    .hero {
+      padding: clamp(4rem, 10vw, 8rem) 0;
+      text-align: center;
+      background: radial-gradient(ellipse at 50% 5%, #2e573e, var(--forest) 70%);
+    }
+    .hero p { max-width: 38rem; margin: 1.25rem auto 0; color: #e0ebdf; }
+    .actions { justify-content: center; margin-top: 1.75rem; }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      min-height: 46px;
+      padding: .55rem 1rem;
+      border: 1px solid var(--lime);
+      border-radius: .45rem;
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .primary { background: var(--lime); color: var(--forest); }
+    .section { padding-block: clamp(2.8rem, 6vw, 5rem); }
+    .intro { color: var(--muted); max-width: 42rem; margin-top: .75rem; }
+    .filters, .costs {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+      margin-top: 1.3rem;
+    }
+    label { display: grid; gap: .3rem; font-weight: 650; }
+    input, select {
+      width: 100%;
+      min-height: 46px;
+      padding: .6rem .75rem;
+      border: 1px solid #7c9086;
+      border-radius: .4rem;
+      background: var(--white);
+      color: var(--ink);
+      font: inherit;
+    }
+    .status { margin: .9rem 0; color: var(--muted); }
+    .catalog {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1rem;
+      margin: 1rem 0 0;
+      padding: 0;
+    }
+    .card, .panel {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: .8rem;
+    }
+    .card { overflow: hidden; }
+    .photo {
+      display: grid;
+      place-items: center;
+      aspect-ratio: 1;
+      background: #e6ede5;
+    }
+    .photo > * { grid-area: 1 / 1; }
+    .photo span { padding: .5rem; text-align: center; color: var(--muted); }
+    .photo img { display: block; width: 100%; height: 100%; object-fit: contain; background: #e6ede5; }
+    .photo img[hidden] { display: none; }
+    .card-body { padding: 1rem; }
+    .category { color: var(--muted); font-size: .85rem; margin-bottom: .35rem; }
+    .price { margin: .55rem 0; font-weight: 750; }
+    .card a { display: inline-block; padding-block: .3rem; text-underline-offset: .2em; }
+    .panel { padding: clamp(1rem, 4vw, 2.25rem); }
+    .guide { padding-left: 1.3rem; margin: 1rem 0 0; }
+    .guide li + li { margin-top: .75rem; }
+    .total { display: block; margin: 1rem 0 .35rem; font-size: 1.5rem; font-weight: 750; }
+    details { border-bottom: 1px solid var(--line); padding: 1rem 0; }
+    details p { margin-top: .55rem; max-width: 45rem; }
+    summary { cursor: pointer; font-weight: 700; }
+    footer { padding: 1.5rem 0; background: var(--forest); color: var(--white); }
+    @media (max-width: 54rem) { .catalog { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 30rem) {
+      .filters, .costs, .catalog { grid-template-columns: 1fr; }
+      .photo { aspect-ratio: 4 / 3; }
+    }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "LoveGoBuy spreadsheet | CAFANS Finds & USD Prices",
+    "inLanguage": "en",
+    "mainEntity": {
+      "@type": "ItemList",
+      "name": "Featured CAFANS products",
+      "numberOfItems": 4,
+      "itemListElement": [
+        {"@type":"ListItem","position":1,"name":"Leather Slides","url":"https://cafans.com/goods-158791.html"},
+        {"@type":"ListItem","position":2,"name":"Sweatshirt","url":"https://cafans.com/goods-158792.html"},
+        {"@type":"ListItem","position":3,"name":"Unisex Embroidered Oversized T-Shirt","url":"https://cafans.com/goods-158200.html"},
+        {"@type":"ListItem","position":4,"name":"Jacket","url":"https://cafans.com/goods-158222.html"}
+      ]
+    }
+  }
+  </script>
+<link rel="canonical" href="https://kakobuyfinds.github.io/dtlyg/">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <strong>LoveGoBuy shopping guide</strong>
+      <nav aria-label="Page sections">
+        <a href="#catalog">Product catalog</a>
+        <a href="#budget">Order budget</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="page-title">
+      <div class="wrap">
+        <h1 id="page-title">LoveGoBuy spreadsheet</h1>
+        <p>Browse shoes, sweatshirts, tees and jackets from CAFANS. Compare estimated USD prices and check each listing before placing an order through LoveGoBuy.</p>
+        <div class="actions">
+          <a class="button primary" href="https://cafans.com/">LoveGoBuy spreadsheet</a>
+          <a class="button" href="https://cafans.com/">Buy it now</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section wrap" id="catalog" aria-labelledby="catalog-title">
+      <h2 id="catalog-title">CAFANS product catalog</h2>
+      <p class="intro">Featured listings checked on <time datetime="2026-11-18">November 18, 2026</time>. Prices are CAFANS estimates in USD. Open the product page to check the current price and available options.</p>
+
+      <div class="filters" id="filters" hidden>
+        <label>Search products
+          <input id="product-search" type="search" placeholder="Try slides or oversized" aria-controls="product-list">
+        </label>
+        <label>Category
+          <select id="category-filter" aria-controls="product-list">
+            <option value="">All categories</option>
+            <option value="shoes">Shoes</option>
+            <option value="sweatshirts">Sweatshirts</option>
+            <option value="tees">T-shirts</option>
+            <option value="jackets">Jackets</option>
+          </select>
+        </label>
+      </div>
+      <p class="status" id="result-count" role="status"></p>
+
+      <ul class="catalog" id="product-list">
+        <li class="card" data-category="shoes">
+          <div class="photo">
+            <span aria-hidden="true">Shoes</span>
+            <img src="https://si.geilicdn.com/open1769158365-252808396-70340000019822fe6f2d0a23b491_1200_1200.jpg" alt="Leather Slides product photo" width="1200" height="1200" loading="lazy" decoding="async">
+          </div>
+          <div class="card-body">
+            <p class="category">Shoes</p>
+            <h3>Leather Slides</h3>
+            <p class="price">≈ $62.36 USD</p>
+            <a href="https://cafans.com/goods-158791.html" aria-label="View Leather Slides on CAFANS">View on CAFANS</a>
+          </div>
+        </li>
+        <li class="card" data-category="sweatshirts">
+          <div class="photo">
+            <span aria-hidden="true">Sweatshirts</span>
+            <img src="https://si.geilicdn.com/open1862809525-1234478995-56360000019a9d1b5cc60aa081c2_1200_1200.jpg" alt="Sweatshirt product photo" width="1200" height="1200" loading="lazy" decoding="async">
+          </div>
+          <div class="card-body">
+            <p class="category">Sweatshirts</p>
+            <h3>Sweatshirt</h3>
+            <p class="price">≈ $27.50 USD</p>
+            <a href="https://cafans.com/goods-158792.html" aria-label="View Sweatshirt on CAFANS">View on CAFANS</a>
+          </div>
+        </li>
+        <li class="card" data-category="tees">
+          <div class="photo">
+            <span aria-hidden="true">T-shirts</span>
+            <img src="https://si.geilicdn.com/open1792148229-1234478995-4b8f00000196ff70111b0aa08290_1066_1066.jpg" alt="Unisex Embroidered Oversized T-Shirt product photo" width="1066" height="1066" loading="lazy" decoding="async">
+          </div>
+          <div class="card-body">
+            <p class="category">T-shirts</p>
+            <h3>Unisex Embroidered Oversized T-Shirt</h3>
+            <p class="price">≈ $32.64 USD</p>
+            <a href="https://cafans.com/goods-158200.html" aria-label="View Unisex Embroidered Oversized T-Shirt on CAFANS">View on CAFANS</a>
+          </div>
+        </li>
+        <li class="card" data-category="jackets">
+          <div class="photo">
+            <span aria-hidden="true">Jackets</span>
+            <img src="https://si.geilicdn.com/open1792148229-1234478995-05a1000001968565f0740a23b491_415_483.jpg" alt="Jacket product photo" width="415" height="483" loading="lazy" decoding="async">
+          </div>
+          <div class="card-body">
+            <p class="category">Jackets</p>
+            <h3>Jacket</h3>
+            <p class="price">≈ $84.54 USD</p>
+            <a href="https://cafans.com/goods-158222.html" aria-label="View Jacket on CAFANS">View on CAFANS</a>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <section class="section wrap" aria-labelledby="order-title">
+      <h2 id="order-title">How to order through LoveGoBuy</h2>
+      <ol class="guide">
+        <li>Open a CAFANS product page and use its Buy Link to check whether LoveGoBuy is offered. Keep the original marketplace link so you can verify the seller and product variant.</li>
+        <li>Match the size chart to a garment or pair of shoes you already own. Record the selected color, measurements and seller price before checkout.</li>
+        <li>When warehouse QC photos are available, compare the item label, color and visible construction with the option you ordered. Check the return window before approving shipment.</li>
+        <li>Ask for a shipping quote using your destination and packed parcel dimensions. Compare the quoted billable weight, delivery estimate and insurance before selecting a route.</li>
+      </ol>
+    </section>
+
+    <section class="section wrap" id="budget" aria-labelledby="budget-title">
+      <div class="panel">
+        <h2 id="budget-title">Estimate your order total</h2>
+        <p class="intro">Enter each known charge in USD. Include international shipping and any applicable fees to compare the total cost of different orders.</p>
+        <div class="costs" id="cost-inputs" hidden>
+          <label>Product subtotal <input type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+          <label>Domestic delivery <input type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+          <label>International shipping <input type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+          <label>Agent fees, taxes and duties <input type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+        </div>
+        <output class="total" id="estimated-total" aria-live="polite" hidden>Estimated total: $0.00 USD</output>
+        <p class="intro">Blank fields count as zero. Use your agent’s current quote and any destination charges when you have them.</p>
+        <noscript><p>Add the product subtotal, domestic delivery, international shipping and applicable fees to estimate your total.</p></noscript>
+      </div>
+    </section>
+
+    <section class="section wrap" id="faq" aria-labelledby="faq-title">
+      <h2 id="faq-title">LoveGoBuy spreadsheet FAQ</h2>
+      <details>
+        <summary>What is this LoveGoBuy spreadsheet?</summary>
+        <p>It is an independent product shortlist built from public CAFANS listings, with filters, links to the original product pages and a worksheet for order costs.</p>
+      </details>
+      <details>
+        <summary>Where do the two main buttons take me?</summary>
+        <p>Both open the CAFANS homepage. Individual catalog cards open their corresponding CAFANS product pages, where you can review buying options.</p>
+      </details>
+      <details>
+        <summary>Do the catalog prices include international shipping?</summary>
+        <p>The displayed figures are reference item prices in USD. Check domestic delivery, international shipping, agent fees and any applicable destination charges separately.</p>
+      </details>
+      <details>
+        <summary>Can I order every item through LoveGoBuy?</summary>
+        <p>Check the buying options on the CAFANS product page and confirm that LoveGoBuy accepts your exact listing, variant and destination. Seller availability can change.</p>
+      </details>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">Independent shopping guide · Product listings sourced from <a href="https://cafans.com/">CAFANS</a></div>
+  </footer>
+
+  <script>
+    (() => {
+      const search = document.getElementById('product-search');
+      const category = document.getElementById('category-filter');
+      const products = [...document.querySelectorAll('#product-list > li')];
+      const resultCount = document.getElementById('result-count');
+
+      function filterProducts() {
+        const terms = search.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+        let count = 0;
+        for (const product of products) {
+          const name = product.querySelector('h3').textContent.toLowerCase();
+          const label = product.querySelector('.category').textContent.toLowerCase();
+          const matchesCategory = !category.value || product.dataset.category === category.value;
+          product.hidden = !matchesCategory || !terms.every(term => `${name} ${label}`.includes(term));
+          if (!product.hidden) count += 1;
+        }
+        resultCount.textContent = count
+          ? `${count} ${count === 1 ? 'listing' : 'listings'}`
+          : 'No matches. Try a different search or category.';
+      }
+
+      search.addEventListener('input', filterProducts);
+      category.addEventListener('change', filterProducts);
+      document.getElementById('filters').hidden = false;
+      filterProducts();
+
+      for (const photo of document.querySelectorAll('.photo img')) {
+        photo.addEventListener('error', () => { photo.hidden = true; });
+        if (photo.complete && photo.naturalWidth === 0) photo.hidden = true;
+      }
+
+      const costs = document.getElementById('cost-inputs');
+      const amounts = [...costs.querySelectorAll('input')];
+      const total = document.getElementById('estimated-total');
+      const dollars = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+
+      function updateTotal() {
+        if (amounts.some(input => !input.validity.valid)) {
+          total.textContent = 'Enter nonnegative amounts with up to two decimal places.';
+          return;
+        }
+        const cents = amounts.reduce((sum, input) => sum + Math.round((input.valueAsNumber || 0) * 100), 0);
+        total.textContent = `Estimated total: ${dollars.format(cents / 100)} USD`;
+      }
+
+      costs.addEventListener('input', updateTotal);
+      costs.hidden = false;
+      total.hidden = false;
+      updateTotal();
+    })();
+  </script>
+</body>
+</html>
